@@ -25,5 +25,4 @@ bin/
 .DS_Store
 Thumbs.db
 
-# Internal working notes (not shipped)
 _docs/
