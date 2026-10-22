@@ -9,3 +9,21 @@ classes/
 mcmodsrepo/
 src/generated/
 runclient.log
+
+# Build
+bin/
+
+# Run
+*.log
+
+# IDE
+.vscode/
+.settings/
+.classpath
+.project
+
+# OS
+.DS_Store
+Thumbs.db
+
+_docs/

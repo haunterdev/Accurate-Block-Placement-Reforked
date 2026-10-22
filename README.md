@@ -28,7 +28,7 @@ Client side.
 ## Installation
 
 1. Install Forge for 1.20.1.
-2. Put `accurateblockplacement-1.3.0.jar` in your `mods` folder.
+2. Put `accurateblockplacement-1.3.1.jar` in your `mods` folder.
 
 ## Warning
 

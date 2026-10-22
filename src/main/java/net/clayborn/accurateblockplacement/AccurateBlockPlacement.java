@@ -9,8 +9,6 @@ import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.eventbus.api.IEventBus;
 
 @Mod(AccurateBlockPlacement.MODID)
 public class AccurateBlockPlacement {
@@ -21,20 +19,24 @@ public class AccurateBlockPlacement {
 
     private static KeyMapping toggleKey;
 
-    @SuppressWarnings("removal")
     public AccurateBlockPlacement() {
-        IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
-        modBus.addListener(this::registerKeys);
+        // Key registration lives in ClientModEvents below. Registering it from this constructor
+        // made the mod-bus listener resolve RegisterKeyMappingsEvent, which loads the client-only
+        // Options class and crashed a dedicated server at mod construction.
     }
 
-    private void registerKeys(RegisterKeyMappingsEvent event) {
-        toggleKey = new KeyMapping(
-                "key.accurateblockplacement.toggle",
-                InputConstants.Type.KEYSYM,
-                InputConstants.UNKNOWN.getValue(),
-                "key.categories.accurateblockplacement"
-        );
-        event.register(toggleKey);
+    @Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+    public static class ClientModEvents {
+        @SubscribeEvent
+        public static void registerKeys(RegisterKeyMappingsEvent event) {
+            toggleKey = new KeyMapping(
+                    "key.accurateblockplacement.toggle",
+                    InputConstants.Type.KEYSYM,
+                    InputConstants.UNKNOWN.getValue(),
+                    "key.categories.accurateblockplacement"
+            );
+            event.register(toggleKey);
+        }
     }
 
     @Mod.EventBusSubscriber(modid = MODID, value = Dist.CLIENT)

@@ -8,6 +8,8 @@ version="${mod_version}"
 displayName="${mod_name}"
 authors="${mod_authors}"
 description='''${mod_description}'''
+# Client-only: a server without the mod and a client with it still match.
+displayTest="IGNORE_ALL_VERSION"
 
 [[mixins]]
 config="accurateblockplacement.mixins.json"

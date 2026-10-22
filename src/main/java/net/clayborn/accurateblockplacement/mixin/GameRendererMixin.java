@@ -157,6 +157,11 @@ public abstract class GameRendererMixin {
 
         AccurateBlockPlacement.disableNormalItemUse = false;
 
+        // Never drive placement while a screen (inventory, chest, chat) is open (GitHub issue #1).
+        if (mc.screen != null) {
+            return;
+        }
+
         IKeyMappingAccessor keyUseAccessor = (IKeyMappingAccessor) mc.options.keyUse;
         boolean freshKeyPress = keyUseAccessor.accurateblockplacement_getClickCount() > 0;
 
@@ -205,6 +210,16 @@ public abstract class GameRendererMixin {
         Block targetBlock = mc.level.getBlockState(blockHitPos).getBlock();
 
         boolean isTargetBlockActivatable = accurateblockplacement$doesBlockHaveOverriddenUseMethod(targetBlock);
+        // A raycast mod can point hitResult past a block with no collision box (an open fence
+        // gate) at the solid block behind it. Trace again with the OUTLINE shape, and if that
+        // hits a usable block, leave the click to vanilla (GitHub issue #2).
+        if (!isTargetBlockActivatable && mc.gameMode != null) {
+            HitResult outlineHit = mc.player.pick(mc.gameMode.getPickRange(), partialTick, false);
+            if (outlineHit != null && outlineHit.getType() == HitResult.Type.BLOCK) {
+                Block outlineBlock = mc.level.getBlockState(((BlockHitResult) outlineHit).getBlockPos()).getBlock();
+                isTargetBlockActivatable = accurateblockplacement$doesBlockHaveOverriddenUseMethod(outlineBlock);
+            }
+        }
         if (isTargetBlockActivatable && !mc.player.isShiftKeyDown()) {
             return;
         }
