@@ -28,7 +28,7 @@ Client side.
 
 1. Install Forge for 1.12.2.
 2. Install MixinBooter.
-3. Put `accurateblockplacement-1.3.0.jar` in your `mods` folder.
+3. Put `accurateblockplacement-1.3.1.jar` in your `mods` folder.
 
 ## Warning
 

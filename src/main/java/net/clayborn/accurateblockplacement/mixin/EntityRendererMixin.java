@@ -165,6 +165,16 @@ public abstract class EntityRendererMixin {
             return;
         }
 
+        // Do not drive placement while a GUI/inventory screen is open. Vanilla suppresses
+        // use-item clicks then, but this mixin runs off getMouseOver every frame, so without
+        // this guard a held block places through an open screen when its hotbar key is clicked
+        // (issue #1).
+        if (mc.currentScreen != null) {
+            AccurateBlockPlacement.disableNormalItemUse = false;
+            AccurateBlockPlacement.freshPressThisTick = false;
+            return;
+        }
+
         AccurateBlockPlacement.disableNormalItemUse = false;
 
         boolean freshKeyPress = AccurateBlockPlacement.freshPressThisTick;
@@ -216,6 +226,16 @@ public abstract class EntityRendererMixin {
         Block targetBlock = mc.world.getBlockState(blockHitPos).getBlock();
 
         boolean isTargetBlockActivatable = accurateblockplacement$doesBlockHaveOverriddenActivateMethod(targetBlock);
+        // A raycast mod can point objectMouseOver past a block with no collision box (an open
+        // fence gate) at the solid block behind it. Trace again against selection boxes, and if
+        // that hits an activatable block, leave the click to vanilla (GitHub issue #2).
+        if (!isTargetBlockActivatable && mc.playerController != null) {
+            RayTraceResult outlineHit = mc.player.rayTrace(mc.playerController.getBlockReachDistance(), partialTick);
+            if (outlineHit != null && outlineHit.typeOfHit == RayTraceResult.Type.BLOCK) {
+                Block outlineBlock = mc.world.getBlockState(outlineHit.getBlockPos()).getBlock();
+                isTargetBlockActivatable = accurateblockplacement$doesBlockHaveOverriddenActivateMethod(outlineBlock);
+            }
+        }
         if (isTargetBlockActivatable && !mc.player.isSneaking()) {
             return;
         }
