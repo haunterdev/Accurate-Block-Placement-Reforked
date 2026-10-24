@@ -1,17 +1,22 @@
 package net.clayborn.accurateblockplacement.core;
 
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
-import org.spongepowered.asm.launch.MixinBootstrap;
-import org.spongepowered.asm.mixin.Mixins;
+import zone.rong.mixinbooter.IEarlyMixinLoader;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 @IFMLLoadingPlugin.MCVersion("1.12.2")
-public class AccurateBlockPlacementPlugin implements IFMLLoadingPlugin {
+public class AccurateBlockPlacementPlugin implements IFMLLoadingPlugin, IEarlyMixinLoader {
 
-    public AccurateBlockPlacementPlugin() {
-        MixinBootstrap.init();
-        Mixins.addConfiguration("mixins.accurateblockplacement.json");
+    // MixinBooter owns Mixin. Calling MixinBootstrap.init() from this constructor
+    // loads a second MixinBootstrap in the LaunchClassLoader and crashes the
+    // client at startup with a loader-constraint LinkageError on
+    // GlobalProperties$Keys, so the config is handed to MixinBooter instead.
+    @Override
+    public List<String> getMixinConfigs() {
+        return Collections.singletonList("mixins.accurateblockplacement.json");
     }
 
     @Override

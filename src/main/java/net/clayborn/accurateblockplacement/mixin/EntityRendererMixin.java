@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 
 import net.clayborn.accurateblockplacement.AccurateBlockPlacement;
+import net.clayborn.accurateblockplacement.IEntityRendererPickHook;
 import net.clayborn.accurateblockplacement.IMinecraftAccessor;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -30,7 +31,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(EntityRenderer.class)
-public abstract class EntityRendererMixin {
+public abstract class EntityRendererMixin implements IEntityRendererPickHook {
 
     @Unique
     private static final String blockActivateMethodName = accurateblockplacement$getBlockActivateMethodName();
@@ -144,8 +145,46 @@ public abstract class EntityRendererMixin {
         }
     }
 
+    @Unique
+    private boolean pickHookRan = false;
+
     @Inject(method = "getMouseOver", at = @At("RETURN"))
     private void onPickComplete(float partialTick, CallbackInfo ci) {
+        this.pickHookRan = true;
+        accurateblockplacement$handlePick(partialTick);
+    }
+
+    // Potion Core's "Fix Reach" option (on by default) replaces mc.entityRenderer with a subclass
+    // whose getMouseOver never calls super, so the RETURN hook above never runs and placement does
+    // nothing. Both vanilla call sites (Minecraft.runTick and renderWorld) run the handler after
+    // the pick when the hook did not.
+    @Override
+    public void accurateblockplacement_beforePick() {
+        this.pickHookRan = false;
+    }
+
+    @Override
+    public void accurateblockplacement_afterPick(float partialTick) {
+        if (!this.pickHookRan) {
+            accurateblockplacement$handlePick(partialTick);
+        }
+    }
+
+    @Inject(method = "renderWorld", require = 0,
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/EntityRenderer;getMouseOver(F)V"))
+    private void beforeRenderWorldPick(float partialTicks, long finishTimeNano, CallbackInfo ci) {
+        accurateblockplacement_beforePick();
+    }
+
+    @Inject(method = "renderWorld", require = 0,
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/EntityRenderer;getMouseOver(F)V",
+                    shift = At.Shift.AFTER))
+    private void afterRenderWorldPick(float partialTicks, long finishTimeNano, CallbackInfo ci) {
+        accurateblockplacement_afterPick(partialTicks);
+    }
+
+    @Unique
+    private void accurateblockplacement$handlePick(float partialTick) {
         if (!AccurateBlockPlacement.isEnabled) {
             AccurateBlockPlacement.disableNormalItemUse = false;
             this.lastSeenBlockPos = null;

@@ -13,7 +13,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
 
 @Mod(modid = AccurateBlockPlacement.MODID, name = "Accurate Block Placement",
-        version = "1.3.0", clientSideOnly = true,
+        version = "1.3.1", clientSideOnly = true,
         dependencies = "required-after:mixinbooter@[9.0,);")
 public class AccurateBlockPlacement {
     public static final String MODID = "accurateblockplacement";

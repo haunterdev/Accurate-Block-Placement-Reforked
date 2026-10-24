@@ -1,6 +1,7 @@
 package net.clayborn.accurateblockplacement.mixin;
 
 import net.clayborn.accurateblockplacement.AccurateBlockPlacement;
+import net.clayborn.accurateblockplacement.IEntityRendererPickHook;
 import net.clayborn.accurateblockplacement.IMinecraftAccessor;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.input.Keyboard;
@@ -69,6 +70,20 @@ public abstract class MinecraftMixin implements IMinecraftAccessor {
         if (freshPress) {
             AccurateBlockPlacement.freshPressThisTick = true;
         }
+    }
+
+    // The runTick half of the getMouseOver fallback in EntityRendererMixin (Potion Core).
+    @Inject(method = "runTick", require = 0,
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/EntityRenderer;getMouseOver(F)V"))
+    private void beforeTickPick(CallbackInfo ci) {
+        ((IEntityRendererPickHook) ((Minecraft) (Object) this).entityRenderer).accurateblockplacement_beforePick();
+    }
+
+    @Inject(method = "runTick", require = 0,
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/EntityRenderer;getMouseOver(F)V",
+                    shift = At.Shift.AFTER))
+    private void afterTickPick(CallbackInfo ci) {
+        ((IEntityRendererPickHook) ((Minecraft) (Object) this).entityRenderer).accurateblockplacement_afterPick(1.0F);
     }
 
     @Override
